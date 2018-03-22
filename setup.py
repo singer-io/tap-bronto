@@ -20,5 +20,5 @@ setup(
     [console_scripts]
     tap-bronto=tap_bronto:main
     ''',
-    packages=['tap_bronto']
+    packages=['tap_bronto', 'tap_bronto.endpoints']
 )
