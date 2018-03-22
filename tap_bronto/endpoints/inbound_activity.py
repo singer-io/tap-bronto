@@ -68,7 +68,7 @@ class InboundActivityStream(Stream):
                 start, end))
 
             _filter = self.make_filter(start, end)
-            field_selector = get_field_selector(
+            field_selector = get_field_selector(self.catalog,
                 self.catalog.get('schema'))
 
             hasMore = True

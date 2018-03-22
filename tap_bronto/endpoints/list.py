@@ -68,7 +68,7 @@ class ListStream(Stream):
 
         hasMore = True
         pageNumber = 1
-        field_selector = get_field_selector(
+        field_selector = get_field_selector(self.catalog,
             self.catalog.get('schema'))
 
         LOGGER.info('Syncing lists.')

@@ -94,7 +94,7 @@ class UnsubscribeStream(Stream):
             _filter = self.make_filter(start, end)
             pageNumber = 1
 
-            field_selector = get_field_selector(
+            field_selector = get_field_selector(self.catalog,
                 self.catalog.get('schema'))
 
             while hasMore:
