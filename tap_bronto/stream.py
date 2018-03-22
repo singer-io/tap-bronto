@@ -26,7 +26,7 @@ class Stream:
     def get_start_date(self, table):
         LOGGER.info('Choosing start date for table {}'.format(table))
         default_start_string = self.config.get(
-            'default_start_date',
+            'start_date',
             '2017-01-01T00:00:00-00:00')
         default_start = parser.parse(default_start_string)
 
@@ -76,13 +76,14 @@ class Stream:
     def generate_catalog(self):
         cls = self.__class__
 
+        #mdata = metadata.new()
+        #mdata = metadata.write(mdata, (), 'selected-by-default', False)
+        #mdata = metadata.write(mdata, (), 'inclusion', 'available')
+
         return [{
             'tap_stream_id': cls.TABLE,
             'stream': cls.TABLE,
             'key_properties': cls.KEY_PROPERTIES,
             'schema': cls.SCHEMA,
-            'metadata': {
-                'selected-by-default': False,
-                'inclusion': 'available',
-            }
+            'metadata': []
         }]

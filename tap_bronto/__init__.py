@@ -15,7 +15,7 @@ LOGGER = singer.get_logger()  # noqa
 
 
 def validate_config(config):
-    required_keys = ['token']
+    required_keys = ['token', 'start_date']
     missing_keys = []
     null_keys = []
     has_errors = False
@@ -120,6 +120,7 @@ def do_sync(args):
         except Exception as exception:
             LOGGER.error(exception)
             LOGGER.error('Failed to sync endpoint, moving on!')
+            raise exception
 
     save_state(state)
 
@@ -149,6 +150,10 @@ def main():
     parser.add_argument(
         '-p', '--properties',
         help='Catalog file with fields selected')
+    parser.add_argument(
+        '-catalog', '--catalog',
+        help='Catalog file with fields selected')
+
 
     parser.add_argument(
         '-d', '--discover',
@@ -165,13 +170,12 @@ def main():
     try:
         if args.discover:
             do_discover(args)
-        else:
+        elif args.properties:
             do_sync(args)
 
     except BaseException as exception:
-        LOGGER.error(str(exception))
-        LOGGER.fatal("Run failed.")
-        exit(1)
+        LOGGER.error(exception)
+        raise exception
 
 
 if __name__ == '__main__':
