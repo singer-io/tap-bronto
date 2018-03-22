@@ -1,7 +1,7 @@
 from funcy import project
 
 from datetime import datetime
-
+import singer.metadata
 
 def with_properties(properties):
     return {
@@ -15,21 +15,21 @@ def with_properties(properties):
     }
 
 
-def is_selected(catalog):
-    metadata = catalog.get('metadata')
+def is_selected(catalog, field=None):
+    metadata = singer.metadata.to_map(catalog.get('metadata'))
 
-    return (metadata.get('inclusion') == 'automatic' or
-            (metadata.get('inclusion') == 'available' and
-             (metadata.get('selected') is True or
-              (metadata.get('selected') is None and
-               metadata.get('selected-by-default') is True))))
+    if not field:
+        return metadata.get((), {}).get('selected')
+    else:
+        # TODO: Fix logic for selected
+        field_metadata = metadata.get(('properties', field), {})
+        return field_metadata.get('selected', False)
 
-
-def get_field_selector(schema):
+def get_field_selector(catalog, schema):
     selections = []
 
     for field, schema in schema.get('properties').items():
-        if is_selected(schema):
+        if is_selected(catalog, field):
             selections.append(field)
 
     def select(data):

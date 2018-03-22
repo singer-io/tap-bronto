@@ -51,7 +51,7 @@ class ContactStream(Stream):
 
         self.login()
 
-        field_selector = get_field_selector(
+        field_selector = get_field_selector(self.catalog,
             self.catalog.get('schema'))
 
         includeGeoIpData = self.any_selected([
@@ -94,7 +94,7 @@ class ContactStream(Stream):
         def flatten(item):
             read_only_data = item.get('readOnlyContactData', {})
             item.pop('readOnlyContactData', None)
-            return {**item, **read_only_data}
+            return dict(item, **read_only_data)
 
         while end < datetime.now(pytz.utc):
             self.login()
@@ -104,7 +104,7 @@ class ContactStream(Stream):
                 start, end))
 
             _filter = self.make_filter(start, end)
-            field_selector = get_field_selector(
+            field_selector = get_field_selector(self.catalog,
                 self.catalog.get('schema'))
 
             pageNumber = 1
