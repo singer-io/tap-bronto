@@ -6,8 +6,8 @@ setup(
     name='tap-bronto',
     version='0.0.1',
     description='Singer.io tap for extracting data from the Bronto API',
-    author='Fishtown Analytics',
-    url='http://fishtownanalytics.com',
+    author='Stitch',
+    url='https://singer.io',
     classifiers=['Programming Language :: Python :: 3 :: Only'],
     py_modules=['tap_bronto'],
     install_requires=[
