@@ -1,4 +1,4 @@
-from tap_bronto.schemas import get_field_selector, ACTIVITY_SCHEMA
+from tap_bronto.schemas import get_field_selector, with_properties, ACTIVITY_SCHEMA
 from tap_bronto.state import incorporate, save_state
 from tap_bronto.stream import Stream
 
@@ -18,7 +18,7 @@ class InboundActivityStream(Stream):
 
     TABLE = 'inbound_activity'
     KEY_PROPERTIES = ['id']
-    SCHEMA = ACTIVITY_SCHEMA
+    SCHEMA, METADATA = with_properties(ACTIVITY_SCHEMA, KEY_PROPERTIES)
 
     def make_filter(self, start, end):
         _filter = self.client.factory.create(

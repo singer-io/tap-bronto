@@ -15,14 +15,11 @@ class UnsubscribeStream(Stream):
 
     TABLE = 'unsubscribe'
     KEY_PROPERTIES = ['contactId', 'method', 'created']
-    SCHEMA = with_properties({
+    SCHEMA, METADATA = with_properties({
         'contactId': {
             'type': ['string'],
             'description': ('The unique ID of the contact associated '
-                            'with the unsubscribe.'),
-            'metadata': {
-                'inclusion': 'automatic',
-            },
+                            'with the unsubscribe.')
         },
         'method': {
             'type': ['string'],
@@ -30,37 +27,23 @@ class UnsubscribeStream(Stream):
                             'unsubscribe. The valid methods are: '
                             'subscriber, admin, bulk, listcleaning, '
                             'fbl (Feedback loop), complaint, '
-                            'account, api'),
-            'metadata': {
-                'inclusion': 'automatic',
-            }
+                            'account, api')
         },
         'deliveryId': {
             'type': ['null', 'string'],
             'description': ('The unique ID of the delivery that '
-                            'resulted in the contact unsubscribing.'),
-            'metadata': {
-                'inclusion': 'available',
-                'selected-by-default': False,
-            },
+                            'resulted in the contact unsubscribing.')
         },
         'complaint': {
             'type': ['null', 'string'],
             'description': ('Optional additional information about the '
-                            'unsubscribe.'),
-            'metadata': {
-                'inclusion': 'available',
-                'selected-by-default': False,
-            }
+                            'unsubscribe.')
         },
         'created': {
             'type': ['string'],
-            'description': 'The date/time the unsubscribe was created.',
-            'metadata': {
-                'inclusion': 'automatic',
-            }
+            'description': 'The date/time the unsubscribe was created.'
         }
-    })
+    }, KEY_PROPERTIES)
 
     def make_filter(self, start, end):
         _filter = self.client.factory.create('unsubscribeFilter')
