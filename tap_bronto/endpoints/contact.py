@@ -1,5 +1,5 @@
 from tap_bronto.schemas import get_field_selector, is_selected, \
-    CONTACT_SCHEMA
+    with_properties, CONTACT_SCHEMA
 from tap_bronto.state import incorporate, save_state
 from tap_bronto.stream import Stream
 from funcy import project
@@ -18,7 +18,7 @@ class ContactStream(Stream):
 
     TABLE = 'contact'
     KEY_PROPERTIES = ['id']
-    SCHEMA = CONTACT_SCHEMA
+    SCHEMA, METADATA = with_properties(CONTACT_SCHEMA, KEY_PROPERTIES)
 
     def make_filter(self, start, end):
         start_filter = self.client.factory.create('dateValue')

@@ -15,7 +15,7 @@ class UnsubscribeStream(Stream):
 
     TABLE = 'unsubscribe'
     KEY_PROPERTIES = ['contactId', 'method', 'created']
-    SCHEMA = with_properties({
+    SCHEMA, METADATA = with_properties({
         'contactId': {
             'type': ['string'],
             'description': ('The unique ID of the contact associated '
@@ -60,7 +60,7 @@ class UnsubscribeStream(Stream):
                 'inclusion': 'automatic',
             }
         }
-    })
+    }, KEY_PROPERTIES)
 
     def make_filter(self, start, end):
         _filter = self.client.factory.create('unsubscribeFilter')

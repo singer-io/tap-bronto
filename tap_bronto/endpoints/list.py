@@ -11,7 +11,7 @@ class ListStream(Stream):
 
     TABLE = 'list'
     KEY_PROPERTIES = ['id']
-    SCHEMA = with_properties({
+    SCHEMA, METADATA = with_properties({
         'id': {
             'type': ['string'],
             'description': ('The unique id assigned to the list.'),
@@ -53,7 +53,7 @@ class ListStream(Stream):
                 'inclusion': 'automatic',
             }
         }
-    })
+    }, KEY_PROPERTIES)
 
     def sync(self):
         key_properties = self.catalog.get('key_properties')

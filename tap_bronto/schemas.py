@@ -1,29 +1,38 @@
 from funcy import project
 
 from datetime import datetime
-import singer.metadata
+from singer import metadata
 
-def with_properties(properties):
-    return {
+def with_properties(properties, key_properties):
+    return_schema = {
         'type': 'object',
         'properties': properties,
-        'metadata': {
-            'inclusion': 'available',
-            'selected-by-default': False,
-        },
         'additionalProperties': False
     }
 
+    mdata = metadata.new()
+
+    for field, schema in return_schema.get('properties').items():
+        if field in key_properties:
+            mdata = metadata.write(mdata, ('properties', field), 'inclusion', 'automatic')
+        else:
+            mdata = metadata.write(mdata, ('properties', field), 'inclusion', 'available')
+
+    # TODO: Add more here?
+    mdata = metadata.write(mdata, (), 'table-key-properties', key_properties)
+
+    return return_schema, metadata.to_list(mdata)
+
 
 def is_selected(catalog, field=None):
-    metadata = singer.metadata.to_map(catalog.get('metadata'))
+    mdata = metadata.to_map(catalog.get('metadata'))
 
     if not field:
-        return metadata.get((), {}).get('selected')
+        return mdata.get((), {}).get('selected')
     else:
         # TODO: Fix logic for selected
-        field_metadata = metadata.get(('properties', field), {})
-        return field_metadata.get('selected', False)
+        field_metadata = mdata.get(('properties', field), {})
+        return field_metadata.get('selected', False) or field_metadata.get('inclusion', False) == 'automatic'
 
 def get_field_selector(catalog, schema):
     selections = []
@@ -47,7 +56,7 @@ def get_field_selector(catalog, schema):
     return select
 
 
-ACTIVITY_SCHEMA = with_properties({
+ACTIVITY_SCHEMA = {
     'id': {
         'type': ['string'],
         'description': ('Manufactured unique ID for the activity.'),
@@ -408,10 +417,9 @@ ACTIVITY_SCHEMA = with_properties({
             'selected-by-default': False,
         }
     }
-})
+}
 
-
-CONTACT_SCHEMA = with_properties({
+CONTACT_SCHEMA = {
     'id': {
         'type': ['string'],
         'description': ('The unique id for the contact. The id can '
@@ -771,4 +779,4 @@ CONTACT_SCHEMA = with_properties({
             'selected-by-default': False
         }
     }
-})
+}
