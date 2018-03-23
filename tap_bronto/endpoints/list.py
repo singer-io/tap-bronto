@@ -14,44 +14,26 @@ class ListStream(Stream):
     SCHEMA, METADATA = with_properties({
         'id': {
             'type': ['string'],
-            'description': ('The unique id assigned to the list.'),
-            'metadata': {
-                'inclusion': 'automatic',
-            },
+            'description': ('The unique id assigned to the list.')
         },
         'name': {
             'type': ['string'],
-            'description': ('The internal name of the list.'),
-            'metadata': {
-                'inclusion': 'available',
-                'selected-by-default': False,
-            },
+            'description': ('The internal name of the list.')
         },
         'label': {
             'type': ['string'],
             'description': ('The external (customer facing) name '
-                            'of the list. '),
-            'metadata': {
-                'inclusion': 'available',
-                'selected-by-default': False,
-            }
+                            'of the list. ')
         },
         'activeCount': {
             'type': ['null', 'integer'],
             'description': ('The number of active contacts of '
-                            'currently on the list.'),
-            'metadata': {
-                'inclusion': 'available',
-                'selected-by-default': False,
-            }
+                            'currently on the list.')
         },
         'status': {
             'type': ['string'],
             'description': ('The status of the list. Valid values '
-                            'are active, deleted, and tmp'),
-            'metadata': {
-                'inclusion': 'automatic',
-            }
+                            'are active, deleted, and tmp')
         }
     }, KEY_PROPERTIES)
 
