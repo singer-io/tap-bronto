@@ -18,8 +18,9 @@ LOGGER = singer.get_logger()  # noqa
 class OutboundActivityStream(Stream):
 
     TABLE = 'outbound_activity'
+    REPLICATION_KEY = 'createdDate'
     KEY_PROPERTIES = ['id']
-    SCHEMA, METADATA = with_properties(ACTIVITY_SCHEMA, KEY_PROPERTIES)
+    SCHEMA, METADATA = with_properties(ACTIVITY_SCHEMA, KEY_PROPERTIES, [REPLICATION_KEY])
 
     def make_filter(self, start, end):
         _filter = self.client.factory.create(
@@ -111,7 +112,7 @@ class OutboundActivityStream(Stream):
                     hasMore = False
 
             self.state = incorporate(
-                self.state, table, 'createdDate',
+                self.state, table, self.REPLICATION_KEY,
                 start.replace(microsecond=0).isoformat())
 
             save_state(self.state)

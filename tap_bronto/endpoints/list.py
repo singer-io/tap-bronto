@@ -35,7 +35,7 @@ class ListStream(Stream):
             'description': ('The status of the list. Valid values '
                             'are active, deleted, and tmp')
         }
-    }, KEY_PROPERTIES)
+    }, KEY_PROPERTIES, [])
 
     def sync(self):
         key_properties = self.catalog.get('key_properties')
