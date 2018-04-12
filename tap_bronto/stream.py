@@ -16,6 +16,7 @@ class Stream:
     TABLE = None
     KEY_PROPERTIES = []
     SCHEMA = {}
+    REPLICATION_KEY = None
 
     def __init__(self, config={}, state={}, catalog=[]):
         self.client = None

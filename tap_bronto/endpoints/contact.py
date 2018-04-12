@@ -17,8 +17,9 @@ LOGGER = singer.get_logger()  # noqa
 class ContactStream(Stream):
 
     TABLE = 'contact'
+    REPLICATION_KEY = 'modified'
     KEY_PROPERTIES = ['id']
-    SCHEMA, METADATA = with_properties(CONTACT_SCHEMA, KEY_PROPERTIES)
+    SCHEMA, METADATA = with_properties(CONTACT_SCHEMA, KEY_PROPERTIES, [REPLICATION_KEY])
 
     def make_filter(self, start, end):
         start_filter = self.client.factory.create('dateValue')
@@ -152,7 +153,7 @@ class ContactStream(Stream):
                     hasMore = False
 
             self.state = incorporate(
-                self.state, table, 'modified',
+                self.state, table, self.REPLICATION_KEY,
                 start.replace(microsecond=0).isoformat())
 
             save_state(self.state)

@@ -3,7 +3,7 @@ from funcy import project
 from datetime import datetime
 from singer import metadata
 
-def with_properties(properties, key_properties):
+def with_properties(properties, key_properties, valid_replication_keys):
     return_schema = {
         'type': 'object',
         'properties': properties,
@@ -20,6 +20,7 @@ def with_properties(properties, key_properties):
 
     # TODO: Add more here?
     mdata = metadata.write(mdata, (), 'table-key-properties', key_properties)
+    mdata = metadata.write(mdata, (), 'valid-replication-keys', valid_replication_keys)
 
     return return_schema, metadata.to_list(mdata)
 

@@ -14,6 +14,7 @@ LOGGER = singer.get_logger()  # noqa
 class UnsubscribeStream(Stream):
 
     TABLE = 'unsubscribe'
+    REPLICATION_KEY = 'created'
     KEY_PROPERTIES = ['contactId', 'method', 'created']
     SCHEMA, METADATA = with_properties({
         'contactId': {
@@ -43,7 +44,7 @@ class UnsubscribeStream(Stream):
             'type': ['string'],
             'description': 'The date/time the unsubscribe was created.'
         }
-    }, KEY_PROPERTIES)
+    }, KEY_PROPERTIES, [REPLICATION_KEY])
 
     def make_filter(self, start, end):
         _filter = self.client.factory.create('unsubscribeFilter')
@@ -100,7 +101,7 @@ class UnsubscribeStream(Stream):
                 self.state = incorporate(
                     self.state,
                     table,
-                    'start_date',
+                    self.REPLICATION_KEY,
                     start.isoformat())
 
                 save_state(self.state)
