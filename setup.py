@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='tap-bronto',
-    version='0.0.5',
+    version='0.0.6',
     description='Singer.io tap for extracting data from the Bronto API',
     author='Stitch',
     url='https://singer.io',
