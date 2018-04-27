@@ -2,6 +2,7 @@ import singer
 import suds
 import sys
 
+from singer import metadata
 from tap_bronto.state import get_last_record_value_for_table
 from dateutil import parser
 
@@ -33,8 +34,8 @@ class Stream:
 
         start = get_last_record_value_for_table(self.state, table)
 
-        replication_method = self.catalog.get('replication_method',
-                                              'INCREMENTAL')
+        mdata = metadata.to_map(self.catalog.get('metadata', {}))
+        replication_method = metadata.get(mdata, (), 'replication-method') or 'INCREMENTAL'
 
         if replication_method == 'FULL_TABLE':
             LOGGER.info('Using FULL_TABLE replication. (All data since {})'
