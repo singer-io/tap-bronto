@@ -58,6 +58,7 @@ class Stream:
         return start
 
     def login(self):
+        LOGGER.info("Logging in")
         try:
             client = suds.client.Client(BRONTO_WSDL, timeout=3600)
             session_id = client.service.login(
@@ -70,6 +71,7 @@ class Stream:
         except suds.WebFault:
             LOGGER.fatal("Login failed!")
             sys.exit(1)
+        LOGGER.info("Done logging in")
 
     @classmethod
     def matches_catalog(cls, catalog):
