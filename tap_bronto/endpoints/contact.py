@@ -12,6 +12,7 @@ import singer
 import socket
 #import suds
 import zeep
+from zeep.exceptions import Fault
 
 #from line_profiler import LineProfiler
 
@@ -90,7 +91,7 @@ class ContactStream(Stream):
         interval = timedelta(hours=6)
 
         def flatten(item):
-            read_only_data = item.get('readOnlyContactData', {})
+            read_only_data = item.get('readOnlyContactData', {}) or {}
             item.pop('readOnlyContactData', None)
             return dict(item, **read_only_data)
 
@@ -103,8 +104,6 @@ class ContactStream(Stream):
 
             _filter = self.make_filter(start, end)
 
-            import pdb
-            pdb.set_trace()
             pageNumber = 1
             hasMore = True
             while hasMore:
@@ -122,8 +121,6 @@ class ContactStream(Stream):
                         includeRFMData=includeRFMData,
                         includeEngagementData=includeEngagementData)
 
-                    LOGGER.info("Read contacts:")
-
                 except socket.timeout:
                     retry_count += 1
                     if retry_count >= 5:
@@ -131,10 +128,11 @@ class ContactStream(Stream):
                         raise
                     LOGGER.warn("Timeout caught, retrying request")
                     continue
+                except Fault:
                 # except suds.WebFault:
-                #     LOGGER.warn("Got signed out - logging in again and retrying")
-                #     self.login()
-                #     continue
+                     LOGGER.warn("Got signed out - logging in again and retrying")
+                     self.login()
+                     continue
 
                 LOGGER.info("... {} results".format(len(results)))
                 extraction_time = singer.utils.now()
@@ -146,9 +144,9 @@ class ContactStream(Stream):
                     #result_dict = suds.sudsobject.asdict(result)
                     flattened = flatten(result_dict)
                     #singer.write_record(table, field_selector(flattened), time_extracted=extraction_time)
-                all_objects = muppy.get_objects()
-                sum1 = summary.summarize(all_objects)
-                summary.print_(sum1)
+                #all_objects = muppy.get_objects()
+                #sum1 = summary.summarize(all_objects)
+                #summary.print_(sum1)
 
                 if len(results) == 0:
                     hasMore = False

@@ -22,14 +22,9 @@ class InboundActivityStream(Stream):
     SCHEMA, METADATA = with_properties(ACTIVITY_SCHEMA, KEY_PROPERTIES, [REPLICATION_KEY])
 
     def make_filter(self, start, end):
-        _filter = self.client.factory.create(
-            'recentInboundActivitySearchRequest')
-        _filter.start = start
-        _filter.end = end
-        _filter.size = 5000
-        _filter.readDirection = 'FIRST'
+        _filter = self.factory['recentInboundActivitySearchRequest']
 
-        return _filter
+        return _filter(start=start, end=end, size=5000, readDirection='FIRST')
 
     def get_start_date(self, table):
         start = super().get_start_date(table)
@@ -61,6 +56,9 @@ class InboundActivityStream(Stream):
 
         LOGGER.info('Syncing inbound activities.')
 
+        field_selector = get_field_selector(self.catalog,
+                                            self.catalog.get('schema'))
+
         while end < datetime.now(pytz.utc):
             self.login()
             start = end
@@ -69,16 +67,13 @@ class InboundActivityStream(Stream):
                 start, end))
 
             _filter = self.make_filter(start, end)
-            field_selector = get_field_selector(self.catalog,
-                self.catalog.get('schema'))
-
             hasMore = True
 
             while hasMore:
                 try:
                     results = \
                         self.client.service.readRecentInboundActivities(
-                            _filter)
+                            filter=_filter)
                 except suds.WebFault as e:
                     if '116' in e.fault.faultstring:
                         hasMore = False
@@ -86,7 +81,7 @@ class InboundActivityStream(Stream):
                     else:
                         raise
 
-                result_dicts = [suds.sudsobject.asdict(result)
+                result_dicts = [zeep.helpers.serialize_object(result, target_cls=dict)
                                 for result in results]
 
                 parsed_results = [field_selector(result)
