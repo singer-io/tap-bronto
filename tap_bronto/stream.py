@@ -5,9 +5,10 @@ import sys
 from singer import metadata
 from tap_bronto.state import get_last_record_value_for_table
 from dateutil import parser
-
+from zeep.exceptions import Fault
 
 BRONTO_WSDL = 'https://api.bronto.com/v4?wsdl'
+WSDL_NAMESPACE = 'http://api.bronto.com/v4'
 
 LOGGER = singer.get_logger()  # noqa
 
@@ -64,14 +65,13 @@ class Stream:
             session_id = client.service.login(
                 self.config.get('token'))
 
-            factory = client.type_factory('http://api.bronto.com/v4')
-            session_header = client.get_element("{http://api.bronto.com/v4}sessionHeader")
-            #session_header = factory['sessionHeader']
+            factory = client.type_factory(WSDL_NAMESPACE)
+            session_header = client.get_element("{%s}sessionHeader" % WSDL_NAMESPACE)
             client.set_default_soapheaders([session_header(sessionId=session_id)])
             self.client = client
             self.factory = factory
 
-        except zeep.exception.Fault:
+        except Fault:
             LOGGER.fatal("Login failed!")
             sys.exit(1)
 
