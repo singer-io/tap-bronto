@@ -6,11 +6,12 @@ from tap_bronto.stream import Stream
 from datetime import datetime, timedelta
 from dateutil import parser
 from funcy import identity, project, filter
+from zeep.exceptions import Fault
 
 import hashlib
 import pytz
 import singer
-import suds
+import zeep
 
 LOGGER = singer.get_logger()  # noqa
 
@@ -23,14 +24,8 @@ class OutboundActivityStream(Stream):
     SCHEMA, METADATA = with_properties(ACTIVITY_SCHEMA, KEY_PROPERTIES, [REPLICATION_KEY])
 
     def make_filter(self, start, end):
-        _filter = self.client.factory.create(
-            'recentOutboundActivitySearchRequest')
-        _filter.start = start
-        _filter.end = end
-        _filter.size = 5000
-        _filter.readDirection = 'FIRST'
-
-        return _filter
+        _filter = self.factory['recentOutboundActivitySearchRequest']
+        return _filter(start=start, end=end, size=5000, readDirection='FIRST')
 
     def get_start_date(self, table):
         start = super().get_start_date(table)
@@ -63,7 +58,6 @@ class OutboundActivityStream(Stream):
         LOGGER.info('Syncing outbound activities.')
 
         while end < datetime.now(pytz.utc):
-            self.login()
             start = end
             end = start + interval
             LOGGER.info("Fetching activities from {} to {}".format(
@@ -79,15 +73,19 @@ class OutboundActivityStream(Stream):
                 try:
                     results = \
                         self.client.service.readRecentOutboundActivities(
-                            _filter)
-                except suds.WebFault as e:
-                    if '116' in e.fault.faultstring:
+                            filter=_filter)
+                except Fault as e:
+                    if '116' in e.message:
                         hasMore = False
                         break
+                    elif '103' in e.message:
+                        LOGGER.warn("Got signed out - logging in again and retrying")
+                        self.login()
+                        continue
                     else:
                         raise
 
-                result_dicts = [suds.sudsobject.asdict(result)
+                result_dicts = [zeep.helpers.serialize_object(result, target_cls=dict)
                                 for result in results]
 
                 parsed_results = [field_selector(result)

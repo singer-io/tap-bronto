@@ -2,7 +2,8 @@ from tap_bronto.schemas import with_properties, get_field_selector
 from tap_bronto.stream import Stream
 
 import singer
-import suds
+import zeep
+from zeep.exceptions import Fault
 
 LOGGER = singer.get_logger()  # noqa
 
@@ -37,6 +38,10 @@ class ListStream(Stream):
         }
     }, KEY_PROPERTIES, [])
 
+    def make_filter(self):
+        _filter = self.factory['mailListFilter']
+        return _filter()
+
     def sync(self):
         key_properties = self.catalog.get('key_properties')
         table = self.TABLE
@@ -46,8 +51,6 @@ class ListStream(Stream):
             self.catalog.get('schema'),
             key_properties=key_properties)
 
-        self.login()
-
         hasMore = True
         pageNumber = 1
         field_selector = get_field_selector(self.catalog,
@@ -55,16 +58,23 @@ class ListStream(Stream):
 
         LOGGER.info('Syncing lists.')
 
+        _filter = self.make_filter()
+
         while hasMore:
-            self.login()
 
             LOGGER.info("... page {}".format(pageNumber))
-            results = self.client.service.readLists(
-                1,  # weird hack -- this just happens to work if we
-                    # pass 1 as the filter. Other values like None
-                    # did not work
-                pageNumber,
-                5000)
+            try:
+                results = self.client.service.readLists(
+                    filter=_filter,
+                    pageNumber=pageNumber,
+                    pageSize=5000)
+            except Fault as e:
+                if '103' in e.message:
+                    LOGGER.warn("Got signed out - logging in again and retrying")
+                    self.login()
+                    continue
+                else:
+                    raise
 
             LOGGER.info("... {} results".format(len(results)))
 
@@ -72,7 +82,7 @@ class ListStream(Stream):
 
             singer.write_records(
                 table,
-                [field_selector(suds.sudsobject.asdict(result))
+                [field_selector(zeep.helpers.serialize_object(result, target_cls=dict))
                  for result in results])
 
             if len(results) == 0:

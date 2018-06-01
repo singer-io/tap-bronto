@@ -1,13 +1,14 @@
 import singer
-import suds
+import zeep
 import sys
 
 from singer import metadata
 from tap_bronto.state import get_last_record_value_for_table
 from dateutil import parser
-
+from zeep.exceptions import Fault
 
 BRONTO_WSDL = 'https://api.bronto.com/v4?wsdl'
+WSDL_NAMESPACE = 'http://api.bronto.com/v4'
 
 LOGGER = singer.get_logger()  # noqa
 
@@ -58,16 +59,19 @@ class Stream:
         return start
 
     def login(self):
+        LOGGER.info("Logging in")
         try:
-            client = suds.client.Client(BRONTO_WSDL, timeout=3600)
+            client = zeep.Client(BRONTO_WSDL)
             session_id = client.service.login(
                 self.config.get('token'))
-            session_header = client.factory.create('sessionHeader')
-            session_header.sessionId = session_id
-            client.set_options(soapheaders=session_header)
-            self.client = client
 
-        except suds.WebFault:
+            factory = client.type_factory(WSDL_NAMESPACE)
+            session_header = client.get_element("{%s}sessionHeader" % WSDL_NAMESPACE)
+            client.set_default_soapheaders([session_header(sessionId=session_id)])
+            self.client = client
+            self.factory = factory
+
+        except Fault:
             LOGGER.fatal("Login failed!")
             sys.exit(1)
 

@@ -9,38 +9,31 @@ from datetime import datetime, timedelta
 import pytz
 import singer
 import socket
-import suds
+import zeep
+from zeep.exceptions import Fault
 
 LOGGER = singer.get_logger()  # noqa
 
 
 class ContactStream(Stream):
-
     TABLE = 'contact'
     REPLICATION_KEY = 'modified'
     KEY_PROPERTIES = ['id']
     SCHEMA, METADATA = with_properties(CONTACT_SCHEMA, KEY_PROPERTIES, [REPLICATION_KEY])
 
     def make_filter(self, start, end):
-        start_filter = self.client.factory.create('dateValue')
-        start_filter.value = start
-        start_filter.operator = 'AfterOrSameDay'
+        start_filter = self.factory['dateValue']
+        end_filter = self.factory['dateValue']
+        _filter = self.factory['contactFilter']
 
-        end_filter = self.client.factory.create('dateValue')
-        end_filter.value = end
-        end_filter.operator = 'Before'
-
-        _filter = self.client.factory.create('contactFilter')
-        _filter.type = 'AND'
-        _filter.modified = [start_filter, end_filter]
-
-        return _filter
+        sf = start_filter(value=start, operator='AfterOrSameDay')
+        ef = end_filter(value=end, operator='Before')
+        return _filter(type = 'AND', modified=[sf, ef])
 
     def any_selected(self, field_names):
         sub_catalog = project(field_names, self.catalog.get('schema'))
         return any([is_selected(field_catalog)
                     for field_catalog in sub_catalog])
-
     def sync(self):
         key_properties = self.catalog.get('key_properties')
         table = self.TABLE
@@ -49,8 +42,6 @@ class ContactStream(Stream):
             self.catalog.get('stream'),
             self.catalog.get('schema'),
             key_properties=key_properties)
-
-        self.login()
 
         field_selector = get_field_selector(self.catalog,
             self.catalog.get('schema'))
@@ -93,29 +84,23 @@ class ContactStream(Stream):
         interval = timedelta(hours=6)
 
         def flatten(item):
-            read_only_data = item.get('readOnlyContactData', {})
+            read_only_data = item.get('readOnlyContactData', {}) or {}
             item.pop('readOnlyContactData', None)
             return dict(item, **read_only_data)
 
+
         while end < datetime.now(pytz.utc):
-            self.login()
             start = end
             end = start + interval
             LOGGER.info("Fetching contacts modified from {} to {}".format(
                 start, end))
 
             _filter = self.make_filter(start, end)
-            field_selector = get_field_selector(self.catalog,
-                self.catalog.get('schema'))
 
             pageNumber = 1
             hasMore = True
-
             while hasMore:
                 retry_count = 0
-
-                self.login()
-
                 try:
                     results = self.client.service.readContacts(
                         filter=_filter,
@@ -123,7 +108,7 @@ class ContactStream(Stream):
                         fields=[],
                         pageNumber=pageNumber,
                         includeSMSKeywords=True,
-                        includeGeoIpData=includeGeoIpData,
+                        includeGeoIPData=includeGeoIpData,
                         includeTechnologyData=includeTechnologyData,
                         includeRFMData=includeRFMData,
                         includeEngagementData=includeEngagementData)
@@ -135,22 +120,25 @@ class ContactStream(Stream):
                         raise
                     LOGGER.warn("Timeout caught, retrying request")
                     continue
+                except Fault:
+                    if '103' in e.message:
+                        LOGGER.warn("Got signed out - logging in again and retrying")
+                        self.login()
+                        continue
+                    else:
+                        raise
 
-                pageNumber = pageNumber + 1
-
-                result_dicts = [suds.sudsobject.asdict(result)
-                                for result in results]
-
-                flattened = [flatten(result) for result in result_dicts]
-
-                LOGGER.info("... {} results".format(len(flattened)))
-
-                singer.write_records(
-                    table,
-                    [field_selector(result) for result in flattened])
+                LOGGER.info("... {} results".format(len(results)))
+                extraction_time = singer.utils.now()
+                for result in results:
+                    result_dict = zeep.helpers.serialize_object(result, target_cls=dict)
+                    flattened = flatten(result_dict)
+                    singer.write_record(table, field_selector(flattened), time_extracted=extraction_time)
 
                 if len(results) == 0:
                     hasMore = False
+
+                pageNumber = pageNumber + 1
 
             self.state = incorporate(
                 self.state, table, self.REPLICATION_KEY,

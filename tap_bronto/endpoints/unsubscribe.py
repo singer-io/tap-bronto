@@ -6,7 +6,8 @@ from datetime import datetime, timedelta
 
 import pytz
 import singer
-import suds
+import zeep
+from zeep.exceptions import Fault
 
 LOGGER = singer.get_logger()  # noqa
 
@@ -47,10 +48,8 @@ class UnsubscribeStream(Stream):
     }, KEY_PROPERTIES, [REPLICATION_KEY])
 
     def make_filter(self, start, end):
-        _filter = self.client.factory.create('unsubscribeFilter')
-        _filter.start = start
-        _filter.end = end
-        return _filter
+        _filter = self.factory['unsubscribeFilter']
+        return _filter(start=start, end=end)
 
     def sync(self):
         key_properties = self.catalog.get('key_properties')
@@ -68,7 +67,6 @@ class UnsubscribeStream(Stream):
         LOGGER.info('Syncing unsubscribes.')
 
         while end < datetime.now(pytz.utc):
-            self.login()
             start = end
             end = start + interval
             LOGGER.info("Fetching unsubscribes from {} to {}".format(
@@ -82,16 +80,23 @@ class UnsubscribeStream(Stream):
                 self.catalog.get('schema'))
 
             while hasMore:
-                self.login()
                 LOGGER.info("... page {}".format(pageNumber))
-                results = self.client.service.readUnsubscribes(
-                    _filter, pageNumber)
-                pageNumber = pageNumber + 1
+                try:
+                    results = self.client.service.readUnsubscribes(
+                        filter=_filter, pageNumber=pageNumber)
+                    pageNumber = pageNumber + 1
 
-                singer.write_records(
-                    table,
-                    [field_selector(suds.sudsobject.asdict(result))
-                     for result in results])
+                    singer.write_records(
+                        table,
+                        [field_selector(zeep.helpers.serialize_object(result, target_cls=dict))
+                          for result in results])
+                except Fault as e:
+                    if '103' in e.message:
+                        LOGGER.warn("Got signed out - logging in again and retrying")
+                        self.login()
+                        continue
+                    else:
+                        raise
 
                 LOGGER.info("... {} results".format(len(results)))
 
