@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 import pytz
 import singer
-import suds
+#import suds
 
 LOGGER = singer.get_logger()  # noqa
 

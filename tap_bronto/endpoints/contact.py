@@ -3,14 +3,15 @@ from tap_bronto.schemas import get_field_selector, is_selected, \
 from tap_bronto.state import incorporate, save_state
 from tap_bronto.stream import Stream
 from funcy import project
-
+from pympler import tracker, summary, muppy
 
 from datetime import datetime, timedelta
 
 import pytz
 import singer
 import socket
-import suds
+#import suds
+import zeep
 
 #from line_profiler import LineProfiler
 
@@ -25,19 +26,13 @@ class ContactStream(Stream):
     SCHEMA, METADATA = with_properties(CONTACT_SCHEMA, KEY_PROPERTIES, [REPLICATION_KEY])
 
     def make_filter(self, start, end):
-        start_filter = self.client.factory.create('dateValue')
-        start_filter.value = start
-        start_filter.operator = 'AfterOrSameDay'
+        start_filter = self.factory['dateValue']
+        end_filter = self.factory['dateValue']
+        _filter = self.factory['contactFilter']
 
-        end_filter = self.client.factory.create('dateValue')
-        end_filter.value = end
-        end_filter.operator = 'Before'
-
-        _filter = self.client.factory.create('contactFilter')
-        _filter.type = 'AND'
-        _filter.modified = [start_filter, end_filter]
-
-        return _filter
+        sf = start_filter(value=start, operator='AfterOrSameDay')
+        ef = end_filter(value=end, operator='Before')
+        return _filter(type = 'AND', modified=[sf, ef])
 
     def any_selected(self, field_names):
         sub_catalog = project(field_names, self.catalog.get('schema'))
@@ -99,6 +94,7 @@ class ContactStream(Stream):
             item.pop('readOnlyContactData', None)
             return dict(item, **read_only_data)
 
+
         while end < datetime.now(pytz.utc):
             start = end
             end = start + interval
@@ -107,6 +103,8 @@ class ContactStream(Stream):
 
             _filter = self.make_filter(start, end)
 
+            import pdb
+            pdb.set_trace()
             pageNumber = 1
             hasMore = True
             while hasMore:
@@ -119,7 +117,7 @@ class ContactStream(Stream):
                         fields=[],
                         pageNumber=pageNumber,
                         includeSMSKeywords=True,
-                        includeGeoIpData=includeGeoIpData,
+                        includeGeoIPData=includeGeoIpData,
                         includeTechnologyData=includeTechnologyData,
                         includeRFMData=includeRFMData,
                         includeEngagementData=includeEngagementData)
@@ -133,24 +131,30 @@ class ContactStream(Stream):
                         raise
                     LOGGER.warn("Timeout caught, retrying request")
                     continue
-                except suds.WebFault:
-                    LOGGER.warn("Got signed out - logging in again and retrying")
-                    self.login()
-                    continue
+                # except suds.WebFault:
+                #     LOGGER.warn("Got signed out - logging in again and retrying")
+                #     self.login()
+                #     continue
 
                 LOGGER.info("... {} results".format(len(results)))
                 extraction_time = singer.utils.now()
+                # list_comp1 (results x2) 10,000
+                # list_comp2 (results x3) 15, 000
+                # write_records(list_comp2)
                 for result in results:
-                    result_dict = suds.sudsobject.asdict(result)
+                    result_dict = zeep.helpers.serialize_object(result, target_cls=dict)
+                    #result_dict = suds.sudsobject.asdict(result)
                     flattened = flatten(result_dict)
-                    singer.write_record(table, field_selector(flattened), time_extracted=extraction_time)
-                LOGGER.info("Result dict:")
+                    #singer.write_record(table, field_selector(flattened), time_extracted=extraction_time)
+                all_objects = muppy.get_objects()
+                sum1 = summary.summarize(all_objects)
+                summary.print_(sum1)
 
                 if len(results) == 0:
                     hasMore = False
 
                 pageNumber = pageNumber + 1
-                    
+
             self.state = incorporate(
                 self.state, table, self.REPLICATION_KEY,
                 start.replace(microsecond=0).isoformat())

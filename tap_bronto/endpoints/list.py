@@ -2,7 +2,7 @@ from tap_bronto.schemas import with_properties, get_field_selector
 from tap_bronto.stream import Stream
 
 import singer
-import suds
+#import suds
 
 LOGGER = singer.get_logger()  # noqa
 

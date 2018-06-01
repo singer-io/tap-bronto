@@ -10,7 +10,7 @@ from funcy import identity, project, filter
 import hashlib
 import pytz
 import singer
-import suds
+#import suds
 
 LOGGER = singer.get_logger()  # noqa
 
