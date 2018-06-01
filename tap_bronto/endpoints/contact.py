@@ -16,7 +16,6 @@ LOGGER = singer.get_logger()  # noqa
 
 
 class ContactStream(Stream):
-    import pdb
     TABLE = 'contact'
     REPLICATION_KEY = 'modified'
     KEY_PROPERTIES = ['id']

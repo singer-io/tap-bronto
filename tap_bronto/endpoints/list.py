@@ -64,10 +64,10 @@ class ListStream(Stream):
 
             LOGGER.info("... page {}".format(pageNumber))
             try:
-              results = self.client.service.readLists(
-                  filter=_filter,
-                  pageNumber=pageNumber,
-                  pageSize=5000)
+                results = self.client.service.readLists(
+                    filter=_filter,
+                    pageNumber=pageNumber,
+                    pageSize=5000)
             except Fault as e:
                 if '103' in e.message:
                     LOGGER.warn("Got signed out - logging in again and retrying")
