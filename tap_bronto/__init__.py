@@ -175,7 +175,7 @@ def main():
             do_sync(args)
 
     except BaseException as exception:
-        LOGGER.error(exception)
+        LOGGER.critical(exception)
         raise exception
 
 
