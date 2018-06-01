@@ -71,10 +71,9 @@ class Stream:
             self.client = client
             self.factory = factory
 
-        except zeep.WebFault:
+        except zeep.exception.Fault:
             LOGGER.fatal("Login failed!")
             sys.exit(1)
-        LOGGER.info("Done logging in")
 
     @classmethod
     def matches_catalog(cls, catalog):

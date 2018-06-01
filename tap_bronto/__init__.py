@@ -114,6 +114,7 @@ def do_sync(args):
     for stream_accessor in stream_accessors:
         try:
             stream_accessor.state = state
+            stream_accessor.login()
             stream_accessor.sync()
             state = stream_accessor.state
 

@@ -1,6 +1,7 @@
 from tap_bronto.schemas import get_field_selector, with_properties, ACTIVITY_SCHEMA
 from tap_bronto.state import incorporate, save_state
 from tap_bronto.stream import Stream
+from zeep.exceptions import Fault
 
 from datetime import datetime, timedelta
 
@@ -9,7 +10,7 @@ from funcy import identity, project, filter
 import hashlib
 import pytz
 import singer
-#import suds
+import zeep
 
 LOGGER = singer.get_logger()  # noqa
 
@@ -60,7 +61,6 @@ class InboundActivityStream(Stream):
                                             self.catalog.get('schema'))
 
         while end < datetime.now(pytz.utc):
-            self.login()
             start = end
             end = start + interval
             LOGGER.info("Fetching activities from {} to {}".format(
@@ -74,10 +74,14 @@ class InboundActivityStream(Stream):
                     results = \
                         self.client.service.readRecentInboundActivities(
                             filter=_filter)
-                except suds.WebFault as e:
-                    if '116' in e.fault.faultstring:
+                except Fault as e:
+                    if '116' in e.message:
                         hasMore = False
                         break
+                    elif '103' in e.message:
+                        LOGGER.warn("Got signed out - logging in again and retrying")
+                        self.login()
+                        continue
                     else:
                         raise
 

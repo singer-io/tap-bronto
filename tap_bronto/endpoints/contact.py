@@ -3,18 +3,14 @@ from tap_bronto.schemas import get_field_selector, is_selected, \
 from tap_bronto.state import incorporate, save_state
 from tap_bronto.stream import Stream
 from funcy import project
-from pympler import tracker, summary, muppy
 
 from datetime import datetime, timedelta
 
 import pytz
 import singer
 import socket
-#import suds
 import zeep
 from zeep.exceptions import Fault
-
-#from line_profiler import LineProfiler
 
 LOGGER = singer.get_logger()  # noqa
 
@@ -47,8 +43,6 @@ class ContactStream(Stream):
             self.catalog.get('stream'),
             self.catalog.get('schema'),
             key_properties=key_properties)
-
-        self.login()
 
         field_selector = get_field_selector(self.catalog,
             self.catalog.get('schema'))
@@ -108,7 +102,6 @@ class ContactStream(Stream):
             hasMore = True
             while hasMore:
                 retry_count = 0
-
                 try:
                     results = self.client.service.readContacts(
                         filter=_filter,
@@ -129,24 +122,19 @@ class ContactStream(Stream):
                     LOGGER.warn("Timeout caught, retrying request")
                     continue
                 except Fault:
-                # except suds.WebFault:
-                     LOGGER.warn("Got signed out - logging in again and retrying")
-                     self.login()
-                     continue
+                    if '103' in e.message:
+                        LOGGER.warn("Got signed out - logging in again and retrying")
+                        self.login()
+                        continue
+                    else:
+                        raise
 
                 LOGGER.info("... {} results".format(len(results)))
                 extraction_time = singer.utils.now()
-                # list_comp1 (results x2) 10,000
-                # list_comp2 (results x3) 15, 000
-                # write_records(list_comp2)
                 for result in results:
                     result_dict = zeep.helpers.serialize_object(result, target_cls=dict)
-                    #result_dict = suds.sudsobject.asdict(result)
                     flattened = flatten(result_dict)
-                    #singer.write_record(table, field_selector(flattened), time_extracted=extraction_time)
-                #all_objects = muppy.get_objects()
-                #sum1 = summary.summarize(all_objects)
-                #summary.print_(sum1)
+                    singer.write_record(table, field_selector(flattened), time_extracted=extraction_time)
 
                 if len(results) == 0:
                     hasMore = False
