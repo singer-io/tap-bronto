@@ -67,7 +67,7 @@ ACTIVITY_SCHEMA = {
         'description': ('The date the activity was recorded.')
     },
     'contactId': {
-        'type': ['string'],
+        'type': ['null', 'string'],
         'description': ('The ID assigned to the contact '
                         'associated with the activity.')
     },
