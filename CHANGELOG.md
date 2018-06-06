@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.0
+  * Version bump for initial release
+
 ## 0.1.1
   * Set`[inbound|outbound]_activity.contactId` to nullable in the schema.
 
