@@ -120,7 +120,7 @@ class ContactStream(Stream):
                         raise
                     LOGGER.warn("Timeout caught, retrying request")
                     continue
-                except Fault:
+                except Fault as e:
                     if '103' in e.message:
                         LOGGER.warn("Got signed out - logging in again and retrying")
                         self.login()
