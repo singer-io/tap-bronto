@@ -13,7 +13,7 @@ def with_properties(properties, key_properties, valid_replication_keys):
     mdata = metadata.new()
 
     for field, schema in return_schema.get('properties').items():
-        if field in key_properties:
+        if field in key_properties or field in valid_replication_keys:
             mdata = metadata.write(mdata, ('properties', field), 'inclusion', 'automatic')
         else:
             mdata = metadata.write(mdata, ('properties', field), 'inclusion', 'available')
