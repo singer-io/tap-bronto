@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.2
+  * Fix a bug where replication-keys were not set with "automatic" metadata [#6](https://github.com/singer-io/tap-bronto/pull/6)
+
 ## 1.0.0
   * Version bump for initial release
 
