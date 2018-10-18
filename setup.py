@@ -13,7 +13,7 @@ setup(
     install_requires=[
         'pytz==2018.4',
         'zeep==2.5.0',
-        'singer-python>=3.5.0',
+        'singer-python>=5.3.1',
         'funcy==1.10',
         'voluptuous==0.10.5',
     ],
