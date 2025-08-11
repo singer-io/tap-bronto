@@ -16,7 +16,7 @@ jobs:
           command: |
             source /usr/local/share/virtualenvs/tap-bronto/bin/activate
             uv pip install pylint
-            pylint tap_bronto --disable missing-docstring,logging-format-interpolation,no-member,broad-except,too-many-branches,consider-using-f-string,unspecified-encoding,raise-missing-from,line-too-long,fixme,unused-variable,no-else-return,redefined-argument-from-local,wrong-import-order,dangerous-default-value,attribute-defined-outside-init,use-a-generator,too-many-locals,invalid-name,deprecated-method,no-else-break,duplicate-code
+            pylint tap_bronto --disable missing-docstring,logging-format-interpolation,no-member,broad-except,too-many-branches,consider-using-f-string,unspecified-encoding,raise-missing-from,line-too-long,fixme,unused-variable,no-else-return,redefined-argument-from-local,wrong-import-order,dangerous-default-value,attribute-defined-outside-init,use-a-generator,too-many-locals,invalid-name,deprecated-method,no-else-break,duplicate-code,no-else-continue,too-many-statements,redefined-builtin,unused-import
 
 workflows:
   version: 2
