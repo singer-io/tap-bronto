@@ -12,6 +12,7 @@ class ListStream(Stream):
 
     TABLE = 'list'
     KEY_PROPERTIES = ['id']
+    replication_method = 'FULL_TABLE'
     SCHEMA, METADATA = with_properties({
         'id': {
             'type': ['string'],
@@ -36,7 +37,7 @@ class ListStream(Stream):
             'description': ('The status of the list. Valid values '
                             'are active, deleted, and tmp')
         }
-    }, KEY_PROPERTIES, [])
+    }, KEY_PROPERTIES, [], replication_method)
 
     def make_filter(self):
         _filter = self.factory['mailListFilter']
