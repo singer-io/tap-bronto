@@ -20,7 +20,8 @@ class InboundActivityStream(Stream):
     TABLE = 'inbound_activity'
     REPLICATION_KEY = 'createdDate'
     KEY_PROPERTIES = ['id']
-    SCHEMA, METADATA = with_properties(ACTIVITY_SCHEMA, KEY_PROPERTIES, [REPLICATION_KEY])
+    replication_method = 'INCREMENTAL'
+    SCHEMA, METADATA = with_properties(ACTIVITY_SCHEMA, KEY_PROPERTIES, [REPLICATION_KEY], replication_method)
 
     def make_filter(self, start, end):
         _filter = self.factory['recentInboundActivitySearchRequest']
