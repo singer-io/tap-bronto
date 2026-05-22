@@ -11,7 +11,7 @@ setup(
     classifiers=['Programming Language :: Python :: 3 :: Only'],
     py_modules=['tap_bronto'],
     install_requires=[
-        'pytz==2018.4',
+        'pytz==2018.5',
         'zeep==2.5.0',
         'singer-python>=5.3.1',
         'funcy==1.10',
