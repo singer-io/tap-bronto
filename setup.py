@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='tap-bronto',
-    version='1.0.2',
+    version='1.0.3',
     description='Singer.io tap for extracting data from the Bronto API',
     author='Stitch',
     url='https://singer.io',
@@ -15,7 +15,8 @@ setup(
         'zeep==2.5.0',
         'singer-python>=5.3.1',
         'funcy==1.10',
-        'voluptuous==0.10.5',
+        'voluptuous==0.10.5',,
+        'requests>=2.33.0'
     ],
     entry_points='''
     [console_scripts]
