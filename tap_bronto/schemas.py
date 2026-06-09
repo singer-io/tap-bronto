@@ -21,7 +21,7 @@ def with_properties(properties, key_properties, valid_replication_keys, replicat
     # TODO: Add more here?
     mdata = metadata.write(mdata, (), 'table-key-properties', key_properties)
     mdata = metadata.write(mdata, (), 'valid-replication-keys', valid_replication_keys)
-    mdata = metadata.write(mdata, (), 'forced_replication_method', replication_method)
+    mdata = metadata.write(mdata, (), 'forced-replication-method', replication_method)
 
     return return_schema, metadata.to_list(mdata)
 
