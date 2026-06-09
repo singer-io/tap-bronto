@@ -17,6 +17,7 @@ class UnsubscribeStream(Stream):
     TABLE = 'unsubscribe'
     REPLICATION_KEY = 'created'
     KEY_PROPERTIES = ['contactId', 'method', 'created']
+    replication_method = 'INCREMENTAL'
     SCHEMA, METADATA = with_properties({
         'contactId': {
             'type': ['string'],
@@ -45,7 +46,7 @@ class UnsubscribeStream(Stream):
             'type': ['string'],
             'description': 'The date/time the unsubscribe was created.'
         }
-    }, KEY_PROPERTIES, [REPLICATION_KEY])
+    }, KEY_PROPERTIES, [REPLICATION_KEY], replication_method)
 
     def make_filter(self, start, end):
         _filter = self.factory['unsubscribeFilter']

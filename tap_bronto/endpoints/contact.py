@@ -19,7 +19,8 @@ class ContactStream(Stream):
     TABLE = 'contact'
     REPLICATION_KEY = 'modified'
     KEY_PROPERTIES = ['id']
-    SCHEMA, METADATA = with_properties(CONTACT_SCHEMA, KEY_PROPERTIES, [REPLICATION_KEY])
+    replication_method = 'INCREMENTAL'
+    SCHEMA, METADATA = with_properties(CONTACT_SCHEMA, KEY_PROPERTIES, [REPLICATION_KEY], replication_method)
 
     def make_filter(self, start, end):
         start_filter = self.factory['dateValue']
