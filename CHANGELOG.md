@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3
+  * Add `forced-replication-method` in metadata [#17](https://github.com/singer-io/tap-bronto/pull/17)
+  * Upgrade python version to 3.12
+
 ## 1.0.2
   * Fix a bug where replication-keys were not set with "automatic" metadata [#6](https://github.com/singer-io/tap-bronto/pull/6)
 

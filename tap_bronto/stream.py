@@ -36,7 +36,7 @@ class Stream:
         start = get_last_record_value_for_table(self.state, table)
 
         mdata = metadata.to_map(self.catalog.get('metadata', {}))
-        replication_method = metadata.get(mdata, (), 'replication-method') or 'INCREMENTAL'
+        replication_method = metadata.get(mdata, (), 'forced-replication-method') or 'INCREMENTAL'
 
         if replication_method == 'FULL_TABLE':
             LOGGER.info('Using FULL_TABLE replication. (All data since {})'
